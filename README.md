@@ -12,6 +12,8 @@ This example uses [Twilio](https://www.twilio.com/) to save an image from your m
 ###Amazon DynamoDB & Amazon S3
 [DynamoDB](https://aws.amazon.com/dynamodb/) is Amazon's non-relational database service. This app leverages DynamoDB to store user data. [S3](https://aws.amazon.com/s3/) provides developers with object level storage that is endlessly scalable. We use S3 to store images received via MMS. 
 
+**Please Note:** Twilio is a 3rd party service that has terms of use that the user is solely responsible for complying with (https://www.twilio.com/legal/tos)
+
 #Usage 
 
 Try it by sending an MMS to (650) 200-1944. 
@@ -19,7 +21,6 @@ Try it by sending an MMS to (650) 200-1944.
 ![Example](https://s3-us-west-2.amazonaws.com/mauerbac-hosting/screenshot2.png)
 
 S3 Link: https://s3-us-west-2.amazonaws.com/mauerbac-selfie/ingest-images/19145824224/795221908928951.png
-
 
 # Building the App
 
