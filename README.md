@@ -105,4 +105,31 @@ Click Test. At the bottom of the page you view Execution result and the log outp
 
 ![Architecture](https://s3-us-west-2.amazonaws.com/mauerbac-hosting/Screen+Shot+2015-09-30+at+4.00.47+PM.png)
 
+### Lambda Deployment
+
+1. Connect to a 64-bit Amazon Linux instance via SSH.
+
+ssh -i key.pem ec2-user@public-ip-address
+
+2. Ensure basic build requirements are installed.
+
+sudo yum install python27-devel python27-pip gcc
+
+3. Install native dependencies required by Pillow.
+
+sudo yum install libjpeg-devel zlib-devel
+
+4. Create and activate a virtual environment.
+
+virtualenv ~/lambda-apigateway-twilio-tutorial
+
+source ~/lambda-apigateway-twilio-tutorial/bin/activate
+
+5. Install libraries in the virtual environment.
+
+pip install Pillow
+
+pip install boto3
+
+pip install twilio 
 
