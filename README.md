@@ -15,8 +15,8 @@ Step-by-step on how to configure, develop & deploy this app on AWS.
 ### Pre-Requisites
 1. Sign-in to AWS or [Create an Account](https://us-west-2.console.aws.amazon.com).
 2. Pick a region in the console and be consistent throughout this app. Use either `us-east-1`, `us-west-2` & `eu-west-1`. 
-3. Create a table in DynamoDB with a single Hash for primary key of type String. We don't need any additional indexes and you can keep the read/write capacity at 1 for this example. [Screenshot](https://s3-us-west-2.amazonaws.com/mauerbac-hosting/dynamoDB.png)
-4. Create an S3 bucket to ingest MMS images. Ex. mauerbac-ingest
+3. Create a table in DynamoDB with a single Hash for primary key of type String. We don't need any additional indexes and you can keep the read/write capacity at 1 for this example.
+4. Create an S3 bucket to ingest MMS images. 
 5. Create an IAM role with access to the S3 bucket & the DynamoDB table.
 6. Create/login to a Twilio account & create a phone number with MMS capability. 
 
@@ -88,7 +88,9 @@ pip install boto3
 pip install twilio 
 ```
 
-### Manually creating the API Gateway and Lambda deployment (for blog compatilibity)
+### (Blog reference) Manually creating the API Gateway and Lambda deployment
+This section has been retained for users who want to refer to the blog post or want to manually
+create the API Gateway and Lambda resources
 
 ###Lambda
 1. Create a new Lambda function. I've provided the function, so we can skip a blueprint.
