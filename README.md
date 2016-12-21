@@ -14,14 +14,6 @@ This example uses [Twilio](https://www.twilio.com/) to save an image from your m
 
 **Please Note:** Twilio is a 3rd party service that has terms of use that the user is solely responsible for complying with (https://www.twilio.com/legal/tos)
 
-#Usage 
-
-Try it by sending an MMS to (650) 200-1944. 
-
-![Example](https://s3-us-west-2.amazonaws.com/mauerbac-hosting/screenshot2.png)
-
-S3 Link: https://s3-us-west-2.amazonaws.com/mauerbac-selfie/ingest-images/19145824224/795221908928951.png
-
 # Building the App
 
 Step-by-step on how to configure, develop & deploy this app on AWS.
@@ -33,6 +25,33 @@ Step-by-step on how to configure, develop & deploy this app on AWS.
 4. Create an S3 bucket to ingest MMS images. Ex. mauerbac-ingest
 5. Create an IAM role with access to the S3 bucket & the DynamoDB table.
 6. Create/login to a Twilio account & create a phone number with MMS capability. 
+
+### *NEW* Serverless Application Model (SAM) Deployment
+
+In the AWS Region you plan to deploy, make sure you have an existing Amazon S3 bucket in which SAM can create the deployment artifacts.
+
+Else create a new bucket using the following AWS CLI command:
+
+```
+aws s3 mb s3://<your-bucket-name>
+```
+To deploy the project for the first time with SAM, and for each subsequent code update, run both of
+the following AWS CLI commands in order.
+
+NOTE: Make sure you update the template.yaml and swagger.yaml (sam/ folder) with the code-uri, region and
+account id before running the commands. Refer to comments in the files for more info
+
+```
+aws cloudformation package \
+--template-file template.yaml \
+--output-template-file template-out.yaml \
+--s3-bucket <your-s3-bucket-name>
+
+aws cloudformation deploy \
+--template-file <path-to-file/template-out.yaml \
+--stack-name <STACK_NAME> \
+--capabilities CAPABILITY_IAM
+```
 
 ###Lambda
 1. Create a new Lambda function. I've provided the function, so we can skip a blueprint.
@@ -103,7 +122,7 @@ Click Test. At the bottom of the page you view Execution result and the log outp
 
 ##Architecture
 
-![Architecture](https://s3-us-west-2.amazonaws.com/mauerbac-hosting/Screen+Shot+2015-09-30+at+4.00.47+PM.png)
+![Architecture](https://s3.amazonaws.com/smallya-useast-1/twilio-apig/architecture.png)
 
 ### Lambda Deployment
 
