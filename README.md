@@ -2,23 +2,17 @@
 
 This example uses [Twilio](https://www.twilio.com/) to save an image from your mobile phone to the AWS cloud. A user sends an image using MMS to a Twilio phone number which sends a request to an Amazon API Gateway endpoint that triggers a Lambda function. The app then returns a publicly accessible link to the image in AWS S3. This app uses AWS Lambda, API Gateway, DynamoDB & S3. It is also 100% serverless!
 
-###AWS Lambda
+NOTE: The project has been updated to use AWS Serverless Application Model (AWS SAM)
 
-[Lambda](https://aws.amazon.com/lambda/) is a compute service that runs your code in response to events. Events are triggered or invoked by resources in your AWS environment or via API Gateway. Here our Lambda function is triggered by an API Gateway endpoint that Twilio hits after an MMS is received. The Lambda function is responsible for writing user info to DynamoDB, writing the image to S3 with meta data and returning a response to Twilio. 
+##Architecture
 
-###Amazon API Gateway 
-[API Gateway](https://aws.amazon.com/api-gateway/) is a fully managed API as a service where you can create, publish, maintain, monitor, and secure APIs at any scale. In this app, we use API Gateway to create an endpoint for Twilio to make a GET request. API Gateway transforms Twilio's URL encoded request into a JSON object, so that Lambda can process it. Lastly, API Gateway takes Lambda's response and builds an XML object for Twilio. 
-
-###Amazon DynamoDB & Amazon S3
-[DynamoDB](https://aws.amazon.com/dynamodb/) is Amazon's non-relational database service. This app leverages DynamoDB to store user data. [S3](https://aws.amazon.com/s3/) provides developers with object level storage that is endlessly scalable. We use S3 to store images received via MMS. 
-
-**Please Note:** Twilio is a 3rd party service that has terms of use that the user is solely responsible for complying with (https://www.twilio.com/legal/tos)
+![Architecture](https://s3.amazonaws.com/smallya-useast-1/twilio-apig/architecture.png)
 
 # Building the App
 
 Step-by-step on how to configure, develop & deploy this app on AWS.
 
-###Housekeeping
+### Pre-Requisites
 1. Sign-in to AWS or [Create an Account](https://us-west-2.console.aws.amazon.com).
 2. Pick a region in the console and be consistent throughout this app. Use either `us-east-1`, `us-west-2` & `eu-west-1`. 
 3. Create a table in DynamoDB with a single Hash for primary key of type String. We don't need any additional indexes and you can keep the read/write capacity at 1 for this example. [Screenshot](https://s3-us-west-2.amazonaws.com/mauerbac-hosting/dynamoDB.png)
@@ -41,6 +35,9 @@ the following AWS CLI commands in order.
 NOTE: Make sure you update the template.yaml and swagger.yaml (sam/ folder) with the code-uri, region and
 account id before running the commands. Refer to comments in the files for more info
 
+You can use the basic_lambda_function.py as the reference for a simple backend to test the end to
+end flow
+
 ```
 aws cloudformation package \
 --template-file template.yaml \
@@ -52,6 +49,46 @@ aws cloudformation deploy \
 --stack-name <STACK_NAME> \
 --capabilities CAPABILITY_IAM
 ```
+
+### Generating the Lambda code
+
+Connect to a 64-bit Amazon Linux instance via SSH.
+
+```
+ssh -i key.pem ec2-user@public-ip-address
+```
+
+Ensure basic build requirements are installed.
+
+```
+sudo yum install python27-devel python27-pip gcc
+```
+
+Install native dependencies required by Pillow.
+
+```
+sudo yum install libjpeg-devel zlib-devel
+```
+
+Create and activate a virtual environment.
+
+```
+virtualenv ~/lambda-apigateway-twilio-tutorial
+
+source ~/lambda-apigateway-twilio-tutorial/bin/activate
+```
+
+Install libraries in the virtual environment.
+
+```
+pip install Pillow
+
+pip install boto3
+
+pip install twilio 
+```
+
+### Manually creating the API Gateway and Lambda deployment (for blog compatilibity)
 
 ###Lambda
 1. Create a new Lambda function. I've provided the function, so we can skip a blueprint.
@@ -120,45 +157,4 @@ Click Test. At the bottom of the page you view Execution result and the log outp
 2. All Lambda interactions are logged in Cloudwatch logs. View the logs for debugging. 
 3. Lambda/API Gateway Forums
 
-##Architecture
-
-![Architecture](https://s3.amazonaws.com/smallya-useast-1/twilio-apig/architecture.png)
-
-### Lambda Deployment
-
-Connect to a 64-bit Amazon Linux instance via SSH.
-
-```
-ssh -i key.pem ec2-user@public-ip-address
-```
-
-Ensure basic build requirements are installed.
-
-```
-sudo yum install python27-devel python27-pip gcc
-```
-
-Install native dependencies required by Pillow.
-
-```
-sudo yum install libjpeg-devel zlib-devel
-```
-
-Create and activate a virtual environment.
-
-```
-virtualenv ~/lambda-apigateway-twilio-tutorial
-
-source ~/lambda-apigateway-twilio-tutorial/bin/activate
-```
-
-Install libraries in the virtual environment.
-
-```
-pip install Pillow
-
-pip install boto3
-
-pip install twilio 
-```
-
+**Please Note:** Twilio is a 3rd party service that has terms of use that the user is solely responsible for complying with (https://www.twilio.com/legal/tos)
