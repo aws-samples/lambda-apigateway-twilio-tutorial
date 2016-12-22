@@ -7,7 +7,7 @@ zip -r9 ../../../lambda_function.zip *
 
 cd ../../../lib64/python2.7/site-packages
 
-zip -r9 lambda_function.zip *
+zip -r9 ../../../lambda_function.zip *
 
 
 
