@@ -123,6 +123,8 @@ aws cloudformation deploy \
 --capabilities CAPABILITY_IAM
 ```
 
+After executing the cloudformation deployment, you'll need to navigate to IAM > Roles > STACK_NAME-LambdaFunctionRole-UNIQUE_STRING and attach the `AmazonS3FullAccess` and `AmazonDynamoDBFullAccess` policies to enable the Lambda function with sufficient permissions.
+
 ### (Blog reference) Manually creating the API Gateway and Lambda deployment
 This section has been retained for users who want to refer to the blog post or want to manually
 create the API Gateway and Lambda resources
