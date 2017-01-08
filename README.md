@@ -92,6 +92,7 @@ Clone this repo and update `lambda_function.py`.
 # lambda_function.py
 account_sid = "account_sid" # Twilio account SID
 auth_token = "auth_token" # Twilio auth token
+phone_number = "phone_number" # Twilio phone number
 dynamodb = boto3.resource('dynamodb', '_region') # AWS region set in Pre-Requisites
 table_users = dynamodb.Table('table_name') # name of DyanmoDB created in Pre-Requisites
 ```
