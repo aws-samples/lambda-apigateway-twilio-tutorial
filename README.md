@@ -99,11 +99,11 @@ table_users = dynamodb.Table('table_name') # name of DyanmoDB created in Pre-Req
 
 Run `bash ./create_lambda_package.sh` which will create the `lambda_function.zip`.
 
-Download the `.zip` file using a command like `scp -i key.pem username@public_ip_address:/path/to/file .`
+Download the `.zip` file using a command like `scp -i key.pem ec2-user@public_ip_address:/path/to/file .` where `/path/to/file` can be determined by `readlink -f lambda_function.zip`.
 
 #### Deploying via SAM
 
-Upload both `swagger.yaml` and `lambda_function.py.zip` into the S3 bucket.
+Upload both `swagger.yaml` and `lambda_function.zip` into the S3 bucket.
 
 To deploy the project for the first time with SAM, and for each subsequent code update, run both of
 the following AWS CLI commands in order.
