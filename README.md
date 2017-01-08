@@ -29,11 +29,30 @@ Else create a new bucket using the following AWS CLI command:
 ```
 aws s3 mb s3://<your-bucket-name>
 ```
+
+Before deploying the project to SAM for the first time, you'll need to update some variables in  `lambda_function.py` and `template.yaml`/`swagger.yaml` (found in `sam/` folder). Additionally, you'll need to zip `lambda_function.py` after updating the variables.
+
+```
+# lambda_function.py
+account_sid = "account_sid" # Twilio account SID
+auth_token = "auth_token" # Twilio auth token
+dynamodb = boto3.resource('dynamodb', '_region') # AWS region set in Pre-Requisites
+table_users = dynamodb.Table('table_name') # name of DyanmoDB created in Pre-Requisites
+
+# swagger.yaml
+# <<region>> : AWS region set in Pre-Requisites, referenced twice in swagger.yaml
+# <<accountId>> : your global AWS account ID (found in MyAccount)
+uri: arn:aws:apigateway:<<region>>:lambda:path/2015-03-31/functions/arn:aws:lambda:<<region>>:<<accountId>>:function:${stageVariables.LambdaFunctionName}/invocations
+
+# template.yaml
+CodeUri: s3://<bucket-name>/lambda_function.py.zip # name of S3 bucket created in Pre-Requiisites
+DefinitionUri: s3://<bucket>/swagger.yaml # name of S3 bucket created in Pre-Requisites
+```
+
+Once updated, zip `lambda_function.py` and place both `swagger.yaml` and `lambda_function.py.zip` into the S3 bucket
+
 To deploy the project for the first time with SAM, and for each subsequent code update, run both of
 the following AWS CLI commands in order.
-
-NOTE: Make sure you update the template.yaml and swagger.yaml (sam/ folder) with the code-uri, region and
-account id before running the commands. Refer to comments in the files for more info
 
 You can use the basic_lambda_function.py as the reference for a simple backend to test the end to
 end flow
