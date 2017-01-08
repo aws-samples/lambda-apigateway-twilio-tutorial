@@ -175,9 +175,9 @@ Our Lambda function solely returns a string of the SMS body. Here we build the X
 ## Connecting the dots & Testing
 
 1. We should now have a publically accessible GET endpoint. Ex: `https://xxxx.execute-api.us-west-2.amazonaws.com/prod/addphoto`
-2. Point your Twilio number to this endpoint. [Screenshot](https://s3-us-west-2.amazonaws.com/mauerbac-hosting/twilio.png)
-3. Our app should now be connected. Let's review: Twilio sends a GET request with MMS image, fromNumber and body to API Gateway. API Gateway transforms the GET request into a JSON object, which is passed to a Lambda function. Lambda processes the object and writes the user to DynamoDB and writes the image to S3. Lambda returns a string which API Gateway uses to create an XML object for Twilio's response to the user. 
-4. First, let's test the Lambda function. Click the Actions dropdown and Configure sample event. We need to simulate the JSON object passed by API Gateway. Example:      
+2. Point your Twilio number to this endpoint. [Screenshot](https://s3-us-west-2.amazonaws.com/mauerbac-hosting/twilio.png) Recommend creating a Progammable SMS > Messaging Service (Inbound Settings > Request URL) and assigning it your Phone Number > Messaging > Messaging Service > `MESSAGING_SERVICE_NAME`.
+3. The app should now be connected. Let's review: Twilio sends a GET request with MMS image, fromNumber and body to API Gateway. API Gateway transforms the GET request into a JSON object, which is passed to a Lambda function. Lambda processes the object and writes the user to DynamoDB and writes the image to S3. Lambda returns a string which API Gateway uses to create an XML object for Twilio's response to the user. 
+4. First, let's test the Lambda function. Click the Actions dropdown and Configure test event. We need to simulate the JSON object passed by API Gateway. Example:      
 ```
 { 
   "body" : "hello",
