@@ -30,15 +30,9 @@ Else create a new bucket using the following AWS CLI command:
 aws s3 mb s3://<your-bucket-name>
 ```
 
-Before deploying the project to SAM for the first time, you'll need to update some variables in  `lambda_function.py` and `template.yaml`/`swagger.yaml` (found in `sam/` folder). Additionally, you'll need to zip `lambda_function.py` after updating the variables.
+Before deploying the project to SAM for the first time, you'll need to update some variables in  `lambda_function.py` and `template.yaml`/`swagger.yaml` (found in `sam/` folder).
 
 ```
-# lambda_function.py
-account_sid = "account_sid" # Twilio account SID
-auth_token = "auth_token" # Twilio auth token
-dynamodb = boto3.resource('dynamodb', '_region') # AWS region set in Pre-Requisites
-table_users = dynamodb.Table('table_name') # name of DyanmoDB created in Pre-Requisites
-
 # swagger.yaml
 # <<region>> : AWS region set in Pre-Requisites, referenced twice in swagger.yaml
 # <<accountId>> : your global AWS account ID (found in MyAccount)
@@ -49,27 +43,7 @@ CodeUri: s3://<bucket-name>/lambda_function.py.zip # name of S3 bucket created i
 DefinitionUri: s3://<bucket>/swagger.yaml # name of S3 bucket created in Pre-Requisites
 ```
 
-Once updated, zip `lambda_function.py` and place both `swagger.yaml` and `lambda_function.py.zip` into the S3 bucket
-
-To deploy the project for the first time with SAM, and for each subsequent code update, run both of
-the following AWS CLI commands in order.
-
-You can use the basic_lambda_function.py as the reference for a simple backend to test the end to
-end flow
-
-```
-aws cloudformation package \
---template-file template.yaml \
---output-template-file template-out.yaml \
---s3-bucket <your-s3-bucket-name>
-
-aws cloudformation deploy \
---template-file <path-to-file/template-out.yaml \
---stack-name <STACK_NAME> \
---capabilities CAPABILITY_IAM
-```
-
-### Generating the Lambda code
+#### Generating the Lambda code
 
 Connect to a 64-bit Amazon Linux instance via SSH.
 
@@ -107,11 +81,53 @@ pip install boto3
 pip install twilio 
 ```
 
+Install git.
+
+```
+sudo yum install git-all
+```
+
+Clone this repo and update `lambda_function.py`.
+
+```
+# lambda_function.py
+account_sid = "account_sid" # Twilio account SID
+auth_token = "auth_token" # Twilio auth token
+dynamodb = boto3.resource('dynamodb', '_region') # AWS region set in Pre-Requisites
+table_users = dynamodb.Table('table_name') # name of DyanmoDB created in Pre-Requisites
+```
+
+Run `bash ./create_lambda_package.sh` which will create the `lambda_function.zip`.
+
+Download the `.zip` file using a command like `scp -i key.pem username@public_ip_address:/path/to/file .`
+
+#### Deploying via SAM
+
+Upload both `swagger.yaml` and `lambda_function.py.zip` into the S3 bucket.
+
+To deploy the project for the first time with SAM, and for each subsequent code update, run both of
+the following AWS CLI commands in order.
+
+You can use the basic_lambda_function.py as the reference for a simple backend to test the end to
+end flow
+
+```
+aws cloudformation package \
+--template-file template.yaml \
+--output-template-file template-out.yaml \
+--s3-bucket <your-s3-bucket-name>
+
+aws cloudformation deploy \
+--template-file <path-to-file/template-out.yaml \
+--stack-name <STACK_NAME> \
+--capabilities CAPABILITY_IAM
+```
+
 ### (Blog reference) Manually creating the API Gateway and Lambda deployment
 This section has been retained for users who want to refer to the blog post or want to manually
 create the API Gateway and Lambda resources
 
-###Lambda
+#### Lambda
 1. Create a new Lambda function. I've provided the function, so we can skip a blueprint.
 2. Give it a name and description. Use Python 2.7 for runtime. 
 3. Use the given Lambda function, `lambda_function.py`. Read through the module and provide a few variables: Twilio credentials, DynamoDB table name & region and S3 ingest bucket. We will upload as a .zip because our function requires a few external libraries, such as Twilio Python SDK. Compress httplib2, pytz, twilio & lambda_function.py and upload as a .zip file. 
@@ -120,7 +136,7 @@ create the API Gateway and Lambda resources
 6. In advanced settings, I recommend changing Timeout to 10 seconds (httplib2 is a bit needy). Currently, max timeout is 60 seconds. 
 7. Review & create function. 
 
-###API Gateway
+#### API Gateway
 1. Create a new API. Give it a name and description. This will be our RESTful endpoint. 
 2. Create a resource. The path should be `/addphoto` , for example.
 3. We need to add a method to this resource. Create a GET method with Lambda integration and select the function we created earlier. API Gateway isn't able to process POST requests that are URL encoded, so we are using GET as a workaround.
@@ -154,7 +170,7 @@ create the API Gateway and Lambda resources
 Our Lambda function solely returns a string of the SMS body. Here we build the XML object and use `$inputRoot` as the string.
 7. Now let's deploy this API, so we can test it! Click the Deploy API button.
 
-###Connecting the dots & Testing
+## Connecting the dots & Testing
 
 1. We should now have a publically accessible GET endpoint. Ex: `https://xxxx.execute-api.us-west-2.amazonaws.com/prod/addphoto`
 2. Point your Twilio number to this endpoint. [Screenshot](https://s3-us-west-2.amazonaws.com/mauerbac-hosting/twilio.png)
