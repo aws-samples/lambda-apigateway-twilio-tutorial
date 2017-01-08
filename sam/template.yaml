@@ -20,7 +20,7 @@ Resources:
     Properties:
       Handler: lambda_function.lambda_handler
       Runtime: python2.7
-      CodeUri: s3://<bucket-name>/lambda_function.py.zip #UPDATE
+      CodeUri: s3://<bucket-name>/lambda_function.zip #UPDATE
       Description: Lambda handler for API Gateway - Twilio integration
       MemorySize: 256
       Timeout: 60
