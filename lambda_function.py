@@ -74,7 +74,7 @@ def lambda_handler(event, context):
         # Add to S3 Bucket
         bucket = "s3_bucket_name"
         key = "ingest-images/" + str(from_number.replace('+', '')) + "/" + str(random.getrandbits(50)) + ".png"
-        resp_url = "https://s3-us-west-2.amazonaws.com/{0}/{1}".format(bucket, str(key))
+        resp_url = "https://s3.amazonaws.com/{0}/{1}".format(bucket, str(key))
         twilio_resp = "Hi {0}, your S3 link: ".format(name) + resp_url
 
         # build meta data
