@@ -16,6 +16,9 @@ paths:
       responses:
         200:
           description: "200 response"
+          headers:
+            Content-Type:
+              type: "string"
       x-amazon-apigateway-integration:
         responses:
           default:
@@ -24,6 +27,8 @@ paths:
               application/xml: "#set($inputRoot = $input.path('$'))\n<?xml version=\"\
                 1.0\" encoding=\"UTF-8\"?>\n<Response>\n    <Message>\n        <Body>\n\
                 \            $inputRoot\n        </Body>\n    </Message>\n</Response> "
+            responseParameters:
+              method.response.header.Content-Type: "'application/xml'"
         requestTemplates:
           application/json: "{\n    \"body\" : \"$input.params('Body')\",\n    \"\
             fromNumber\" : \"$input.params('From')\",\n    \"image\" : \"$input.params('MediaUrl0')\"\
