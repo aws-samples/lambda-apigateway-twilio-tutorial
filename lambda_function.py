@@ -23,7 +23,6 @@ from twilio.rest import TwilioRestClient
 account_sid = "account_sid"
 auth_token = "auth_token"
 client = TwilioRestClient(account_sid, auth_token)
-phone_number = "phone_number" # +10000000000
 
 # create an S3 & Dynamo session
 s3 = boto3.resource('s3')
@@ -41,10 +40,6 @@ def sample_filter(im):
     filter_image = ImageOps.colorize(ImageOps.grayscale(im), black, white)
     return filter_image
 
-def send_message(event, response):
-    client.messages.create(to=event['fromNumber'], from_=phone_number,
-                                     body=response)
-
 def lambda_handler(event, context):
 
     message = event['body']
@@ -58,15 +53,11 @@ def lambda_handler(event, context):
     # a new user
     if response_dynamo['Count'] == 0:
         if len(message) == 0:
-            response = "Please send us an SMS with your name first!"
-            send_message(event, response)
-            return response
+            return "Please send us an SMS with your name first!"
         else:
             name = message.split(" ")
             table_users.put_item(Item={'fromNumber': from_number, 'name': name[0]})
-            response = "We've added {0} to the system! Now send us a selfie! ".format(name[0])
-            send_message(event, response)
-            return response
+            return "We've added {0} to the system! Now send us a selfie! ".format(name[0])
     else:
         name = response_dynamo['Items'][0]['name']
 
@@ -97,6 +88,5 @@ def lambda_handler(event, context):
     else:
 
         twilio_resp = "No image found, try sending a selfie!"
-
-    send_message(event, twilio_resp)
+        
     return twilio_resp
