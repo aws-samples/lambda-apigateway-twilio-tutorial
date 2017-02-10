@@ -14,7 +14,7 @@ import urllib2
 
 from boto3.dynamodb.conditions import Key
 from boto3.session import Session
-from PIL import ImageOps
+from PIL import Image, ImageOps
 from twilio.rest import TwilioRestClient
 
 
@@ -80,7 +80,7 @@ def lambda_handler(event, context):
         # build meta data
         m_data = {'fromNumber': from_number, 'url': resp_url, 'name': name}
         output = StringIO.StringIO()
-        im.save(output)
+        im.save(output, format="PNG")
         im_data = output.getvalue()
         output.close()
 
