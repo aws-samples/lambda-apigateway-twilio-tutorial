@@ -15,10 +15,9 @@ Step-by-step on how to configure, develop & deploy this app on AWS.
 ### Pre-Requisites
 1. Sign-in to AWS or [Create an Account](https://us-west-2.console.aws.amazon.com).
 2. Pick a region in the console and be consistent throughout this app. Use either `us-east-1`, `us-west-2` & `eu-west-1`. 
-3. Create a table in DynamoDB with a single Hash for primary key of type String. We don't need any additional indexes and you can keep the read/write capacity at 1 for this example.
+3. Create a table in DynamoDB with a single Hash named `fromNumber` for primary key of type String. We don't need any additional indexes and you can keep the read/write capacity at 1 for this example.
 4. Create an S3 bucket to ingest MMS images. 
-5. Create an IAM role with access to the S3 bucket & the DynamoDB table.
-6. Create/login to a Twilio account & create a phone number with MMS capability. 
+5. Create/login to a Twilio account & create a phone number with MMS capability. 
 
 ### *NEW* Serverless Application Model (SAM) Deployment
 
@@ -29,28 +28,21 @@ Else create a new bucket using the following AWS CLI command:
 ```
 aws s3 mb s3://<your-bucket-name>
 ```
-To deploy the project for the first time with SAM, and for each subsequent code update, run both of
-the following AWS CLI commands in order.
 
-NOTE: Make sure you update the template.yaml and swagger.yaml (sam/ folder) with the code-uri, region and
-account id before running the commands. Refer to comments in the files for more info
-
-You can use the basic_lambda_function.py as the reference for a simple backend to test the end to
-end flow
+Before deploying the project to SAM for the first time, you'll need to update some variables in  `lambda_function.py` and `template.yaml`/`swagger.yaml` (found in `sam/` folder).
 
 ```
-aws cloudformation package \
---template-file template.yaml \
---output-template-file template-out.yaml \
---s3-bucket <your-s3-bucket-name>
+# swagger.yaml
+# <<region>> : AWS region set in Pre-Requisites, referenced twice in swagger.yaml
+# <<accountId>> : your global AWS account ID (found in MyAccount)
+uri: arn:aws:apigateway:<<region>>:lambda:path/2015-03-31/functions/arn:aws:lambda:<<region>>:<<accountId>>:function:${stageVariables.LambdaFunctionName}/invocations
 
-aws cloudformation deploy \
---template-file <path-to-file/template-out.yaml \
---stack-name <STACK_NAME> \
---capabilities CAPABILITY_IAM
+# template.yaml
+CodeUri: s3://<bucket-name>/lambda_function.py.zip # name of S3 bucket created in Pre-Requiisites
+DefinitionUri: s3://<bucket>/swagger.yaml # name of S3 bucket created in Pre-Requisites
 ```
 
-### Generating the Lambda code
+#### Generating the Lambda code
 
 Connect to a 64-bit Amazon Linux instance via SSH.
 
@@ -88,11 +80,56 @@ pip install boto3
 pip install twilio 
 ```
 
+Install git.
+
+```
+sudo yum install git-all
+```
+
+Clone this repo and update `lambda_function.py`.
+
+```
+# lambda_function.py
+account_sid = "account_sid" # Twilio account SID
+auth_token = "auth_token" # Twilio auth token
+phone_number = "phone_number" # Twilio phone number
+dynamodb = boto3.resource('dynamodb', '_region') # AWS region set in Pre-Requisites
+table_users = dynamodb.Table('table_name') # name of DyanmoDB created in Pre-Requisites
+```
+
+Run `bash ./create_lambda_package.sh` which will create the `lambda_function.zip`.
+
+Download the `.zip` file using a command like `scp -i key.pem ec2-user@public_ip_address:/path/to/file .` where `/path/to/file` can be determined by `readlink -f lambda_function.zip`.
+
+#### Deploying via SAM
+
+Upload both `swagger.yaml` and `lambda_function.zip` into the S3 bucket.
+
+To deploy the project for the first time with SAM, and for each subsequent code update, run both of
+the following AWS CLI commands in order.
+
+You can use the basic_lambda_function.py as the reference for a simple backend to test the end to
+end flow
+
+```
+aws cloudformation package \
+--template-file template.yaml \
+--output-template-file template-out.yaml \
+--s3-bucket <your-s3-bucket-name>
+
+aws cloudformation deploy \
+--template-file <path-to-file/template-out.yaml \
+--stack-name <STACK_NAME> \
+--capabilities CAPABILITY_IAM
+```
+
+After executing the cloudformation deployment, you'll need to navigate to IAM > Roles > STACK_NAME-LambdaFunctionRole-UNIQUE_STRING and attach the `AmazonS3FullAccess` and `AmazonDynamoDBFullAccess` policies to enable the Lambda function with sufficient permissions.
+
 ### (Blog reference) Manually creating the API Gateway and Lambda deployment
 This section has been retained for users who want to refer to the blog post or want to manually
 create the API Gateway and Lambda resources
 
-###Lambda
+#### Lambda
 1. Create a new Lambda function. I've provided the function, so we can skip a blueprint.
 2. Give it a name and description. Use Python 2.7 for runtime. 
 3. Use the given Lambda function, `lambda_function.py`. Read through the module and provide a few variables: Twilio credentials, DynamoDB table name & region and S3 ingest bucket. We will upload as a .zip because our function requires a few external libraries, such as Twilio Python SDK. Compress httplib2, pytz, twilio & lambda_function.py and upload as a .zip file. 
@@ -101,7 +138,7 @@ create the API Gateway and Lambda resources
 6. In advanced settings, I recommend changing Timeout to 10 seconds (httplib2 is a bit needy). Currently, max timeout is 60 seconds. 
 7. Review & create function. 
 
-###API Gateway
+#### API Gateway
 1. Create a new API. Give it a name and description. This will be our RESTful endpoint. 
 2. Create a resource. The path should be `/addphoto` , for example.
 3. We need to add a method to this resource. Create a GET method with Lambda integration and select the function we created earlier. API Gateway isn't able to process POST requests that are URL encoded, so we are using GET as a workaround.
@@ -135,12 +172,12 @@ create the API Gateway and Lambda resources
 Our Lambda function solely returns a string of the SMS body. Here we build the XML object and use `$inputRoot` as the string.
 7. Now let's deploy this API, so we can test it! Click the Deploy API button.
 
-###Connecting the dots & Testing
+## Connecting the dots & Testing
 
 1. We should now have a publically accessible GET endpoint. Ex: `https://xxxx.execute-api.us-west-2.amazonaws.com/prod/addphoto`
-2. Point your Twilio number to this endpoint. [Screenshot](https://s3-us-west-2.amazonaws.com/mauerbac-hosting/twilio.png)
-3. Our app should now be connected. Let's review: Twilio sends a GET request with MMS image, fromNumber and body to API Gateway. API Gateway transforms the GET request into a JSON object, which is passed to a Lambda function. Lambda processes the object and writes the user to DynamoDB and writes the image to S3. Lambda returns a string which API Gateway uses to create an XML object for Twilio's response to the user. 
-4. First, let's test the Lambda function. Click the Actions dropdown and Configure sample event. We need to simulate the JSON object passed by API Gateway. Example:      
+2. Point your Twilio number to this endpoint. [Screenshot](https://s3-us-west-2.amazonaws.com/mauerbac-hosting/twilio.png) Recommend creating a Progammable SMS > Messaging Service (Inbound Settings > Request URL) and assigning it your Phone Number > Messaging > Messaging Service > `MESSAGING_SERVICE_NAME`.
+3. The app should now be connected. Let's review: Twilio sends a GET request with MMS image, fromNumber and body to API Gateway. API Gateway transforms the GET request into a JSON object, which is passed to a Lambda function. Lambda processes the object and writes the user to DynamoDB and writes the image to S3. Lambda returns a string which API Gateway uses to create an XML object for Twilio's response to the user. 
+4. First, let's test the Lambda function. Click the Actions dropdown and Configure test event. We need to simulate the JSON object passed by API Gateway. Example:      
 ```
 { 
   "body" : "hello",
